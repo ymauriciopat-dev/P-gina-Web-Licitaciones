@@ -1,0 +1,19 @@
+name: Sincronización horaria de SECOP
+
+on:
+  schedule:
+    - cron: '0 * * * *'   # cada hora (opcional)
+  workflow_dispatch:      # para lanzarlo manualmente desde el botón
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Llamar a la API de sincronización
+        run: |
+          RESPONSE=$(curl -s -H "Authorization: Bearer ${{ secrets.DETECTA_CRON_SECRET }}" \
+            -H "x-vercel-protection-bypass: ${{ secrets.DETECTA_BYPASS_SECRET }}" \
+            "${{ secrets.DETECTA_URL }}/api/sync?modo=full")
+          echo "$RESPONSE"
+          # Si la respuesta contiene "done":true, termina ok
+          echo "$RESPONSE" | grep -q '"done":true' && exit 0 || exit 1
